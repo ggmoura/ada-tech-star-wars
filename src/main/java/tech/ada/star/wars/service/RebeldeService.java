@@ -95,7 +95,7 @@ public class RebeldeService {
         if (rebeldeFonteOptional.isPresent() && rebeldeAlvoOptional.isPresent()) {
             Rebelde rebeldeFonte = rebeldeFonteOptional.get();
             Rebelde rebeldeAlvo = rebeldeAlvoOptional.get();
-            validarTraidor(negociadorFonte, negociadorAlvo);
+            validarTraidor(rebeldeFonte, rebeldeAlvo);
             recursosFonte = agruparRecursos(recursosFonte);
             recursosAlvo = agruparRecursos(recursosAlvo);
             validarEquivalencia(recursosFonte, recursosAlvo);
@@ -126,11 +126,11 @@ public class RebeldeService {
                     Recurso recursoFonte = recursosInventarioFonte.stream()
                             .filter(r -> r.getItem().equals(ra.getItem())).findFirst()
                             .orElse(new Recurso(ra.getItem(), ra.getQuantidade()));
-                    if (Objects.isNull(recursoAlvo.getId())) {
-                        recursoAlvo.setRebelde(rebeldeAlvo);
+                    if (Objects.isNull(recursoFonte.getId())) {
+                        recursoFonte.setRebelde(rebeldeAlvo);
                         recursosInventarioFonte.add(recursoAlvo);
                     } else {
-                        recursoAlvo.setQuantidade(recursoAlvo.getQuantidade() + ra.getQuantidade());
+                        recursoFonte.setQuantidade(recursoAlvo.getQuantidade() + ra.getQuantidade());
                     }
                     recursoFonte.setQuantidade(recursoFonte.getQuantidade() + ra.getQuantidade());
                 });
