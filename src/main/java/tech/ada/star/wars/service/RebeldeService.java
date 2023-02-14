@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import static tech.ada.star.wars.Constant.QUANTIDADE_REPORTS_TRAIDOR;
 import tech.ada.star.wars.controller.commons.ResponseMessage;
+import tech.ada.star.wars.data.entity.Item;
 import tech.ada.star.wars.data.entity.Localizacao;
 import tech.ada.star.wars.data.entity.Rebelde;
 import tech.ada.star.wars.data.entity.Recurso;
@@ -15,6 +16,7 @@ import tech.ada.star.wars.exception.BusinessException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -34,12 +36,12 @@ public class RebeldeService {
     @Autowired
     private Logger logger;
 
-    public void adicionarRebelde(Rebelde rebelde) {
+    public Rebelde adicionarRebelde(Rebelde rebelde) {
         if (!repository.existsByNome(rebelde.getNome())) {
             List<Recurso> inventario = agruparRecursos(rebelde.getInventario());
             inventario.forEach(i -> i.setRebelde(rebelde));
             rebelde.setInventario(inventario);
-            repository.save(rebelde);
+            return repository.save(rebelde);
         } else {
             throw new BusinessException(
                 ResponseMessage.error("Nome {0} já está sendo utilizado", rebelde.getNome())
@@ -55,8 +57,7 @@ public class RebeldeService {
             localizacao.setLatitude(source.getLatitude());
             localizacao.setLongitude(source.getLongitude());
             localizacao.setNomeBase(source.getNomeBase());
-            localizacaoRepository.save(localizacao);
-            return localizacao;
+            return localizacaoRepository.save(localizacao);
         } else {
             throw new BusinessException(
                 ResponseMessage.error("Não existe localização para o Rebelde {0}", nomeRebelde)
@@ -64,7 +65,7 @@ public class RebeldeService {
         }
     }
 
-    public void reportarRebeldeTraidor(Rebelde _rebelde) {
+    public Rebelde reportarRebeldeTraidor(Rebelde _rebelde) {
         String nomeRebelde = _rebelde.getNome();
         Optional<Rebelde> target = repository.findByNome(nomeRebelde);
         if (target.isPresent()) {
@@ -72,7 +73,7 @@ public class RebeldeService {
             if (rebelde.getContadorTraidor() < QUANTIDADE_REPORTS_TRAIDOR) {
                 Integer contadorTraidor = rebelde.getContadorTraidor();
                 rebelde.setContadorTraidor(++contadorTraidor);
-                repository.save(rebelde);
+                return repository.save(rebelde);
             } else {
                 throw new BusinessException(
                         ResponseMessage.error("O Rebelde {0} já foi definido como traidor.", nomeRebelde)
@@ -109,20 +110,32 @@ public class RebeldeService {
                             .filter(r -> r.getItem().equals(rf.getItem())).findFirst().orElseThrow();
                     recursoFonte.setQuantidade(recursoFonte.getQuantidade() - rf.getQuantidade());
                     Recurso recursoAlvo = recursosInventarioAlvo.stream()
-                            .filter(r -> r.getItem().equals(rf.getItem())).findFirst().orElseThrow();
-                    recursoAlvo.setQuantidade(recursoAlvo.getQuantidade() + rf.getQuantidade());
+                            .filter(r -> r.getItem().equals(rf.getItem())).findFirst()
+                            .orElse(new Recurso(rf.getItem(), rf.getQuantidade()));
+                    if (Objects.isNull(recursoAlvo.getId())) {
+                        recursoAlvo.setRebelde(rebeldeFonte);
+                        recursosInventarioAlvo.add(recursoAlvo);
+                    } else {
+                        recursoAlvo.setQuantidade(recursoAlvo.getQuantidade() + rf.getQuantidade());
+                    }
                 });
                 recursosAlvo.forEach(ra -> {
                     Recurso recursoAlvo = recursosInventarioAlvo.stream()
                             .filter(r -> r.getItem().equals(ra.getItem())).findFirst().orElseThrow();
                     recursoAlvo.setQuantidade(recursoAlvo.getQuantidade() - ra.getQuantidade());
                     Recurso recursoFonte = recursosInventarioFonte.stream()
-                            .filter(r -> r.getItem().equals(ra.getItem())).findFirst().orElseThrow();
+                            .filter(r -> r.getItem().equals(ra.getItem())).findFirst()
+                            .orElse(new Recurso(ra.getItem(), ra.getQuantidade()));
+                    if (Objects.isNull(recursoAlvo.getId())) {
+                        recursoAlvo.setRebelde(rebeldeAlvo);
+                        recursosInventarioFonte.add(recursoAlvo);
+                    } else {
+                        recursoAlvo.setQuantidade(recursoAlvo.getQuantidade() + ra.getQuantidade());
+                    }
                     recursoFonte.setQuantidade(recursoFonte.getQuantidade() + ra.getQuantidade());
                 });
                 recursoRepository.saveAll(recursosInventarioFonte);
                 recursoRepository.saveAll(recursosInventarioAlvo);
-                System.out.println();
             } else {
                 throw new BusinessException(erros);
             }
@@ -173,12 +186,17 @@ public class RebeldeService {
     private void validarInventario(
             List<ResponseMessage> erros, List<Recurso> recursosNegociacao,
             List<Recurso> recursosInventario, String agente) {
-        List<Recurso> indisponiveis =
-                recursosInventario.stream().filter(recursosNegociacao::contains).collect(Collectors.toList());
+
+        List<Item> itensNegociacao =
+                recursosNegociacao.stream().map(Recurso::getItem).collect(Collectors.toList());
+        List<Item> itensInventario =
+                recursosInventario.stream().map(Recurso::getItem).collect(Collectors.toList());
+        List<Item> indisponiveis = itensNegociacao.stream()
+                .filter(item -> !itensInventario.contains(item)).collect(Collectors.toList());
         if (!indisponiveis.isEmpty()) {
-            indisponiveis.forEach(recurso ->
-                    erros.add(ResponseMessage.error(
-                            "Negociador {0} não possui o item {1}.", agente, recurso.getItem().name())
+            indisponiveis.forEach(item ->
+                    erros.add(ResponseMessage.error("Negociador {0} não possui o item {1} para negociação.",
+                            agente, item.name())
                     )
             );
         }
@@ -198,8 +216,7 @@ public class RebeldeService {
 
     private List<Recurso> agruparRecursos(List<Recurso> recursos) {
         return new ArrayList<>(recursos.stream().collect(Collectors.toMap(Recurso::getItem, Function.identity(),
-                (a, b) -> new Recurso(a.getItem(), a.getQuantidade() + b.getQuantidade())))
-                .values());
+                (a, b) -> new Recurso(a.getItem(), a.getQuantidade() + b.getQuantidade()))).values());
     }
 
     public Rebelde pesquisarRebelde(String nomeRebelde) {
