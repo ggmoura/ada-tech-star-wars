@@ -19,10 +19,16 @@ public class AdaTechApplication {
 # Utilize o Swagger, para testar a aplicação
 ### http://localhost:8080/swagger-ui/index.html#/
 
-# H2
+![Alt text](doc/swagger.png?raw=true "Swagger")
+
+
+# Acesse o H2 para visualizar os dados
+* JDBC URL: jdbc:h2:mem:ada_tech
+* User Name: ada
+* Password: 
 #### http://localhost:8080/h2
 
-![Alt text](doc/swagger.png?raw=true "Swagger")
+![Alt text](doc/h2.png?raw=true "H2")
 
 # Cenário de teste
 
