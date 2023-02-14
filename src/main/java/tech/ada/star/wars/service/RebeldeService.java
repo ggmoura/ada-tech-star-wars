@@ -113,7 +113,7 @@ public class RebeldeService {
                             .filter(r -> r.getItem().equals(rf.getItem())).findFirst()
                             .orElse(new Recurso(rf.getItem(), rf.getQuantidade()));
                     if (Objects.isNull(recursoAlvo.getId())) {
-                        recursoAlvo.setRebelde(rebeldeFonte);
+                        recursoAlvo.setRebelde(rebeldeAlvo);
                         recursosInventarioAlvo.add(recursoAlvo);
                     } else {
                         recursoAlvo.setQuantidade(recursoAlvo.getQuantidade() + rf.getQuantidade());
@@ -127,12 +127,11 @@ public class RebeldeService {
                             .filter(r -> r.getItem().equals(ra.getItem())).findFirst()
                             .orElse(new Recurso(ra.getItem(), ra.getQuantidade()));
                     if (Objects.isNull(recursoFonte.getId())) {
-                        recursoFonte.setRebelde(rebeldeAlvo);
-                        recursosInventarioFonte.add(recursoAlvo);
+                        recursoFonte.setRebelde(rebeldeFonte);
+                        recursosInventarioFonte.add(recursoFonte);
                     } else {
                         recursoFonte.setQuantidade(recursoAlvo.getQuantidade() + ra.getQuantidade());
                     }
-                    recursoFonte.setQuantidade(recursoFonte.getQuantidade() + ra.getQuantidade());
                 });
                 recursoRepository.saveAll(recursosInventarioFonte);
                 recursoRepository.saveAll(recursosInventarioAlvo);

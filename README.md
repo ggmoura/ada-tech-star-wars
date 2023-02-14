@@ -39,8 +39,8 @@ public class AdaTechApplication {
   },
   "inventario": [
     {
-      "item": "ARMA",
-      "quantidade": 5
+      "item": "COMIDA",
+      "quantidade": 4
     }
   ]
 }
@@ -64,13 +64,48 @@ public class AdaTechApplication {
     },
     {
       "item": "COMIDA",
-      "quantidade": 100
+      "quantidade": 4
     }
   ]
 }
 ```
+### Tabela Recurso
+Dois rebeldes cadastrados
+* Marta Silva 4 COMIDA, 10 ARMA
+* Maria Sophia 4 COMIDA
 
+![Alt text](doc/cadastro_rebelde.png?raw=true "Cadastro Rebelde")
+  
 
+[POST -> /rebeldes/negociacoes](http://localhost:8080/swagger-ui/index.html#/rebelde/negociarItens)
+```json
+{
+  "negociadorFonte": {
+    "nome": "Maria Sophia",
+    "recusrsosOferecidos": [
+      {
+        "item": "COMIDA",
+        "quantidade": 4
+      }
+    ]
+  },
+  "negociadorAlvo": {
+    "nome": "Marta Silva",
+    "recusrsosOferecidos": [
+      {
+        "item": "ARMA",
+        "quantidade": 1
+      }
+    ]
+  }
+}
+```
+
+A Marta Silva negociou 1 ARMA, com a Maria Sophia, que deu em troca 4 COMIDA
+* Marta Silva 8 COMIDA, 9 ARMA
+* Maria Sophia 0 COMIDA, 1 ARMA
+
+![Alt text](doc/negociacao_recursos.png?raw=true "Cadastro Rebelde")
 
 # Testes
 Todos os métodos de negócio do serviço core da aplicaão foram testados
