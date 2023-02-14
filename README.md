@@ -1,5 +1,5 @@
-# lets-code
-Entrega do desafio técnico da Let's Code, para a posição de professor, tecnologia Java!
+# Ada Tech
+Entrega do desafio técnico da Ada Tech, para a posição de professor, tecnologia Java!
 
 
 # Swagger

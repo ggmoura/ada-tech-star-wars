@@ -3,7 +3,7 @@ package tech.ada.star.wars.service;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import tech.ada.star.wars.Constant;
+import static tech.ada.star.wars.Constant.QUANTIDADE_REPORTS_TRAIDOR;
 import tech.ada.star.wars.controller.commons.ResponseMessage;
 import tech.ada.star.wars.data.entity.Localizacao;
 import tech.ada.star.wars.data.entity.Rebelde;
@@ -69,7 +69,7 @@ public class RebeldeService {
         Optional<Rebelde> target = repository.findByNome(nomeRebelde);
         if (target.isPresent()) {
             Rebelde rebelde = target.get();
-            if (rebelde.getContadorTraidor() < Constant.QUANTIDADE_REPORTS_TRAIDOR) {
+            if (rebelde.getContadorTraidor() < QUANTIDADE_REPORTS_TRAIDOR) {
                 Integer contadorTraidor = rebelde.getContadorTraidor();
                 rebelde.setContadorTraidor(++contadorTraidor);
                 repository.save(rebelde);
@@ -94,29 +94,30 @@ public class RebeldeService {
         if (rebeldeFonteOptional.isPresent() && rebeldeAlvoOptional.isPresent()) {
             Rebelde rebeldeFonte = rebeldeFonteOptional.get();
             Rebelde rebeldeAlvo = rebeldeAlvoOptional.get();
+            validarTraidor(negociadorFonte, negociadorAlvo);
             recursosFonte = agruparRecursos(recursosFonte);
             recursosAlvo = agruparRecursos(recursosAlvo);
             validarEquivalencia(recursosFonte, recursosAlvo);
             List<Recurso> recursosInventarioFonte = recursoRepository.findByRebelde(rebeldeFonte);
-            validarInventário(erros, recursosFonte, recursosInventarioFonte, "negociadorFonte");
+            validarInventario(erros, recursosFonte, recursosInventarioFonte, "negociadorFonte");
             List<Recurso> recursosInventarioAlvo = recursoRepository.findByRebelde(rebeldeAlvo);
-            validarInventário(erros, recursosAlvo, recursosInventarioAlvo, "negociadorAlvo");
+            validarInventario(erros, recursosAlvo, recursosInventarioAlvo, "negociadorAlvo");
 
             if (erros.isEmpty()) {
                 recursosFonte.forEach(rf -> {
                     Recurso recursoFonte = recursosInventarioFonte.stream()
-                            .filter(r -> r.getItem().equals(rf.getItem())).findFirst().get();
+                            .filter(r -> r.getItem().equals(rf.getItem())).findFirst().orElseThrow();
                     recursoFonte.setQuantidade(recursoFonte.getQuantidade() - rf.getQuantidade());
                     Recurso recursoAlvo = recursosInventarioAlvo.stream()
-                            .filter(r -> r.getItem().equals(rf.getItem())).findFirst().get();
+                            .filter(r -> r.getItem().equals(rf.getItem())).findFirst().orElseThrow();
                     recursoAlvo.setQuantidade(recursoAlvo.getQuantidade() + rf.getQuantidade());
                 });
                 recursosAlvo.forEach(ra -> {
                     Recurso recursoAlvo = recursosInventarioAlvo.stream()
-                            .filter(r -> r.getItem().equals(ra.getItem())).findFirst().get();
+                            .filter(r -> r.getItem().equals(ra.getItem())).findFirst().orElseThrow();
                     recursoAlvo.setQuantidade(recursoAlvo.getQuantidade() - ra.getQuantidade());
                     Recurso recursoFonte = recursosInventarioFonte.stream()
-                            .filter(r -> r.getItem().equals(ra.getItem())).findFirst().get();
+                            .filter(r -> r.getItem().equals(ra.getItem())).findFirst().orElseThrow();
                     recursoFonte.setQuantidade(recursoFonte.getQuantidade() + ra.getQuantidade());
                 });
                 recursoRepository.saveAll(recursosInventarioFonte);
@@ -136,6 +137,25 @@ public class RebeldeService {
         }
     }
 
+    private void validarTraidor(Rebelde negociadorFonte, Rebelde negociadorAlvo) {
+        List<ResponseMessage> erros = new ArrayList<>();
+        if (negociadorFonte.getContadorTraidor().equals(QUANTIDADE_REPORTS_TRAIDOR)) {
+            erros.add(ResponseMessage.error(
+                    "Negociador {0} foi reportado como traidor, portanto, não pode negociar itens.",
+                    negociadorFonte.getNome())
+            );
+        }
+        if (negociadorAlvo.getContadorTraidor().equals(QUANTIDADE_REPORTS_TRAIDOR)) {
+            erros.add(ResponseMessage.error(
+                    "Negociador {0} foi reportado como traidor, portanto, não pode negociar itens.",
+                    negociadorAlvo.getNome())
+            );
+        }
+        if (!erros.isEmpty()) {
+            throw new BusinessException(erros);
+        }
+    }
+
     private void validarEquivalencia(List<Recurso> recursosFonte, List<Recurso> recursosAlvo) {
         Long totalPontosFonte =  recursosFonte.stream().map(r -> r.getItem().getPontuacao() * r.getQuantidade())
                 .reduce(0L, Long::sum);
@@ -150,11 +170,11 @@ public class RebeldeService {
 
     }
 
-    private void validarInventário(
+    private void validarInventario(
             List<ResponseMessage> erros, List<Recurso> recursosNegociacao,
             List<Recurso> recursosInventario, String agente) {
         List<Recurso> indisponiveis =
-                recursosInventario.stream().filter(r -> recursosNegociacao.contains(r)).collect(Collectors.toList());
+                recursosInventario.stream().filter(recursosNegociacao::contains).collect(Collectors.toList());
         if (!indisponiveis.isEmpty()) {
             indisponiveis.forEach(recurso ->
                     erros.add(ResponseMessage.error(
@@ -177,9 +197,20 @@ public class RebeldeService {
     }
 
     private List<Recurso> agruparRecursos(List<Recurso> recursos) {
-        return recursos.stream().collect(Collectors.toMap(rec -> rec.getItem(), Function.identity(),
+        return new ArrayList<>(recursos.stream().collect(Collectors.toMap(Recurso::getItem, Function.identity(),
                 (a, b) -> new Recurso(a.getItem(), a.getQuantidade() + b.getQuantidade())))
-                .values().stream().collect(Collectors.toList());
+                .values());
     }
 
+    public Rebelde pesquisarRebelde(String nomeRebelde) {
+        Optional<Rebelde> rebeldeOptional = repository.findByNome(nomeRebelde);
+        if (rebeldeOptional.isPresent()) {
+            return rebeldeOptional.get();
+        }
+        throw new BusinessException(ResponseMessage.error("Rebelde {0} inexistente.", nomeRebelde));
+    }
+
+    public List<Rebelde> listarRebeldes() {
+        return repository.findAll();
+    }
 }

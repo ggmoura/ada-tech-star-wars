@@ -6,10 +6,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class OpenApiAppParam {
 
-	@Value("${letscode.app.project.description:Let's Code - Aprenda a programar}")
+	@Value("${letscode.app.project.description:Ada Tech - Aprenda a programar}")
 	private String description;
 
-	@Value("${letscode.app.project.name:Let's Code Api}")
+	@Value("${letscode.app.project.name:Ada Tech Star-Wars Api}")
 	private String title;
 
 	@Value("${letscode.app.project.appversion:0.0.1-SNAPSHOT}")

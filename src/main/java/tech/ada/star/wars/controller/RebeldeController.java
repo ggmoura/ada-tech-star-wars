@@ -1,5 +1,7 @@
 package tech.ada.star.wars.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,6 +14,7 @@ import tech.ada.star.wars.controller.model.negociacao.NegociacaoDTO;
 import tech.ada.star.wars.controller.model.rebelde.RebeldeRequestDTO;
 import tech.ada.star.wars.controller.model.rebelde.RebeldeResponseDTO;
 import tech.ada.star.wars.controller.model.rebelde.RebeldeTraidorRequestDTO;
+import tech.ada.star.wars.controller.relatorio.RebeldeListResponseDTO;
 import tech.ada.star.wars.data.entity.Localizacao;
 import tech.ada.star.wars.data.entity.Rebelde;
 import tech.ada.star.wars.data.entity.Recurso;
@@ -23,6 +26,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "rebeldes")
+@Tag(name = "rebelde", description = "API Rebeldes")
 public class RebeldeController {
 
     @Autowired
@@ -31,7 +35,23 @@ public class RebeldeController {
     @Autowired
     private RebeldeService service;
 
+    @Operation(summary = "Recuperar Rebelde pelo nome")
+    @GetMapping("/{nome}")
+    public ResponseObject<RebeldeResponseDTO> consultarRebelde(@PathVariable(value = "nome") String nome) {
+        Rebelde rebelde = service.pesquisarRebelde(nome);
+        return ResponseObject.of(mapper.map(rebelde, RebeldeResponseDTO.class));
+    }
+
+    @Operation(summary = "Listar todos os Rebelde que não foram reportados como traidores")
+    @GetMapping
+    public ResponseObject<RebeldeListResponseDTO> listarRebeldes() {
+        List<RebeldeListResponseDTO> itens = service.listarRebeldes().stream().map(
+                rebelde -> mapper.map(rebelde, RebeldeListResponseDTO.class)).collect(Collectors.toList());
+        return ResponseObject.page(itens);
+    }
+
     @ResponseStatus(code = HttpStatus.CREATED)
+    @Operation(summary = "Adicionar um rebelde, o nome do rebelde não pode ser repetido")
     @PostMapping
     public ResponseObject<RebeldeResponseDTO> adicionarRebelde(@Valid @RequestBody RebeldeRequestDTO request) {
         Rebelde rebelde = mapper.map(request, Rebelde.class);
@@ -40,6 +60,7 @@ public class RebeldeController {
         return ResponseObject.of(response, ResponseMessage.success("Rebelde {0} registrado", response.getNome()));
     }
 
+    @Operation(summary = "Atualizar Localidade do Rebelde")
     @PutMapping("/localizacoes")
     public ResponseObject<LocalizacaoResponseDTO> atualizarLocalizacaoRebelde(
             @Valid @RequestBody LocalizacaoAtualizacaoRequestDTO request) {
@@ -51,7 +72,8 @@ public class RebeldeController {
         );
     }
 
-    @PutMapping("/traidores")
+    @Operation(summary = "Reportar Rebelde traidor")
+    @PatchMapping("/traidores")
     public ResponseObject<Void> reportarRebeldeTraidor(@Valid @RequestBody RebeldeTraidorRequestDTO traidor) {
         Rebelde rebelde = mapper.map(traidor, Rebelde.class);
         service.reportarRebeldeTraidor(rebelde);
@@ -60,7 +82,8 @@ public class RebeldeController {
         );
     }
 
-    @PutMapping("/negociacoes")
+    @Operation(summary = "Negociar itens entre os rebeldes que não foram reportados como traidor")
+    @PostMapping("/negociacoes")
     public ResponseObject<Void> negociarItens(@Valid @RequestBody NegociacaoDTO negociacao) {
         List<Recurso> recursosFonte = negociacao.getNegociadorFonte().getRecusrsosOferecidos().stream()
                 .map(recursoDTO -> mapper.map(recursoDTO, Recurso.class)).collect(Collectors.toList());
