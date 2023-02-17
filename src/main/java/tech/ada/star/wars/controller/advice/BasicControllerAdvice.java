@@ -41,20 +41,22 @@ public class BasicControllerAdvice {
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ResponseObject<Void>> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
 		final List<FieldError> fieldErrors = ex.getFieldErrors();
-		ResponseObject<Void> response = new ResponseObject<Void>();
-		fieldErrors.forEach(err -> response.addMessage(ResponseMessage.error("{0}, ".concat(err.getDefaultMessage()), err.getField())));
+		ResponseObject<Void> response = new ResponseObject<>();
+		fieldErrors.forEach(err -> response.addMessage(ResponseMessage.error("{0}, ".concat(err.getDefaultMessage()),
+				err.getField())));
 		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 	}
 
 	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
-	public ResponseEntity<ResponseObject<Void>> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex) {
+	public ResponseEntity<ResponseObject<Void>> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex)
+	{
 		ResponseObject<Void> response = buildResponseObject(DEFAULT_ERROR_MESSAGE, "MethodArgumentNotValid");
 		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 	}
 
 	@ExceptionHandler(HttpMessageNotReadableException.class)
 	public ResponseEntity<ResponseObject<Void>> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
-		ResponseObject<Void> response = buildResponseObject(DEFAULT_ERROR_MESSAGE, "HttpMessageNotReadable");
+		ResponseObject<Void> response = buildResponseObject(DEFAULT_ERROR_MESSAGE, ex.getMessage());
 		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 	}
 
