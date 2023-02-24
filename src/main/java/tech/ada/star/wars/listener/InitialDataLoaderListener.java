@@ -1,6 +1,5 @@
 package tech.ada.star.wars.listener;
 
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -37,7 +36,6 @@ public class InitialDataLoaderListener {
 		}
 	}
 
-	@NotNull
 	private Rebelde getRebelde(String nome, Integer idade, Genero genero) {
 		Rebelde rebelde = new Rebelde();
 		rebelde.setNome(nome);
