@@ -30,6 +30,15 @@ public class AdaTechApplication {
 
 ![Alt text](doc/h2.png?raw=true "H2")
 
+
+# Ao iniciar, o sistema irá incluir dois rebeldes, cada um com 10 intens de cada recurso, para facilitar os testes.
+ * caso queira desabilitar a inclusão de Rebeldes automática, ao iniciar o sistema basta incluir a seguinte variável
+```shell
+ada.inicializa.dados: false
+```
+
+
+
 # Cenário de teste
 
 [POST -> /rebeldes](http://localhost:8080/swagger-ui/index.html#/rebelde/adicionarRebelde)

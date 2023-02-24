@@ -18,6 +18,11 @@ public class Recurso extends BaseEntity<Long> {
         this.quantidade = quantidade;
     }
 
+    public Recurso(Item item, Long quantidade, Rebelde rebelde) {
+        this(item, quantidade);
+        this.rebelde = rebelde;
+    }
+
     @Enumerated(EnumType.STRING)
     private Item item;
     private Long quantidade;
