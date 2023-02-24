@@ -100,9 +100,9 @@ public class RebeldeService {
             recursosAlvo = agruparRecursos(recursosAlvo);
             validarEquivalencia(recursosFonte, recursosAlvo);
             List<Recurso> recursosInventarioFonte = recursoRepository.findByRebelde(rebeldeFonte);
-            validarInventario(erros, recursosFonte, recursosInventarioFonte, "negociadorFonte");
+            validarInventario(erros, recursosFonte, recursosInventarioFonte, negociadorFonte.getNome());
             List<Recurso> recursosInventarioAlvo = recursoRepository.findByRebelde(rebeldeAlvo);
-            validarInventario(erros, recursosAlvo, recursosInventarioAlvo, "negociadorAlvo");
+            validarInventario(erros, recursosAlvo, recursosInventarioAlvo, negociadorAlvo.getNome());
 
             if (erros.isEmpty()) {
                 recursosFonte.forEach(rf -> {
