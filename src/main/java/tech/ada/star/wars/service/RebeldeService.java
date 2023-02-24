@@ -130,7 +130,7 @@ public class RebeldeService {
                         recursoFonte.setRebelde(rebeldeFonte);
                         recursosInventarioFonte.add(recursoFonte);
                     } else {
-                        recursoFonte.setQuantidade(recursoAlvo.getQuantidade() + ra.getQuantidade());
+                        recursoFonte.setQuantidade(recursoFonte.getQuantidade() + ra.getQuantidade());
                     }
                 });
                 recursoRepository.saveAll(recursosInventarioFonte);
