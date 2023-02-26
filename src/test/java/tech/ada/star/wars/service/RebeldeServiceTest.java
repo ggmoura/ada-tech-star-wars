@@ -1,6 +1,5 @@
 package tech.ada.star.wars.service;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -332,7 +331,6 @@ class RebeldeServiceTest {
 
     }
 
-    @NotNull
     private Rebelde getRebelde(String nome) {
         Rebelde rebelde = getRebeldeSingle(nome);
         Localizacao localizacao = getLocalizacao();
@@ -343,9 +341,6 @@ class RebeldeServiceTest {
         return rebelde;
     }
 
-
-
-    @NotNull
     private Recurso getRecurso(Long quantidade, Item item) {
         Recurso recurso = new Recurso();
         recurso.setQuantidade(quantidade);
@@ -353,7 +348,6 @@ class RebeldeServiceTest {
         return recurso;
     }
 
-    @NotNull
     private Rebelde getRebeldeSingle(String nome) {
         Rebelde rebelde = new Rebelde();
         rebelde.setGenero(Genero.FEMININO);
@@ -362,7 +356,6 @@ class RebeldeServiceTest {
         return rebelde;
     }
 
-    @NotNull
     private Localizacao getLocalizacao() {
         Localizacao localizacao = new Localizacao();
         localizacao.setNomeBase("Nome Base Localizacao");
@@ -370,4 +363,5 @@ class RebeldeServiceTest {
         localizacao.setLongitude(0L);
         return localizacao;
     }
+
 }

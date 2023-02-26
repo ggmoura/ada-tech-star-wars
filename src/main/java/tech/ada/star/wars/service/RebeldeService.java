@@ -3,7 +3,6 @@ package tech.ada.star.wars.service;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import static tech.ada.star.wars.Constant.QUANTIDADE_REPORTS_TRAIDOR;
 import tech.ada.star.wars.controller.commons.ResponseMessage;
 import tech.ada.star.wars.data.entity.Item;
 import tech.ada.star.wars.data.entity.Localizacao;
@@ -14,12 +13,12 @@ import tech.ada.star.wars.data.repository.RebeldeRepository;
 import tech.ada.star.wars.data.repository.RecursoRepository;
 import tech.ada.star.wars.exception.BusinessException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.math.BigInteger;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static tech.ada.star.wars.Constant.QUANTIDADE_REPORTS_TRAIDOR;
 
 @Service
 public class RebeldeService {
@@ -226,7 +225,14 @@ public class RebeldeService {
         throw new BusinessException(ResponseMessage.error("Rebelde {0} inexistente.", nomeRebelde));
     }
 
-    public List<Rebelde> listarRebeldes() {
-        return repository.findAll();
+    public Map<Rebelde, Long> listarRebeldes() {
+        List<Rebelde> rebeldes = repository.findAll();
+        Map<Rebelde, Long> map = new HashMap<>();
+        rebeldes.forEach(rebelde -> {
+            List<Long> pontos = rebelde.getInventario().stream().map(
+                    recurso -> recurso.getQuantidade() * recurso.getItem().getPontuacao()).collect(Collectors.toList());
+            map.put(rebelde, pontos.stream().reduce(0L, (a, b) -> a + b));
+        });
+        return map;
     }
 }

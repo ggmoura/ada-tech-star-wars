@@ -21,7 +21,9 @@ import tech.ada.star.wars.data.entity.Recurso;
 import tech.ada.star.wars.service.RebeldeService;
 
 import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -45,8 +47,13 @@ public class RebeldeController {
     @Operation(summary = "Listar todos os Rebelde que não foram reportados como traidores")
     @GetMapping
     public ResponseObject<RebeldeListResponseDTO> listarRebeldes() {
-        List<RebeldeListResponseDTO> itens = service.listarRebeldes().stream().map(
-                rebelde -> mapper.map(rebelde, RebeldeListResponseDTO.class)).collect(Collectors.toList());
+        Map<Rebelde, Long> rebeldeLongMap = service.listarRebeldes();
+        List<RebeldeListResponseDTO> itens = new ArrayList<>();
+        rebeldeLongMap.forEach((rebelde, pontos) -> {
+            RebeldeListResponseDTO rebeldeDTO = mapper.map(rebelde, RebeldeListResponseDTO.class);
+            rebeldeDTO.setTotalPontos(pontos);
+            itens.add(rebeldeDTO);
+        });
         return ResponseObject.page(itens);
     }
 
